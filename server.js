@@ -15,6 +15,12 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Could not connect to MongoDB', err));
 
+// Log every new request in the terminal
+app.use((req, res, next) => {
+    console.log(`New request: ${req.method} ${req.url}`);
+    next();
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 
