@@ -78,13 +78,15 @@ router.post('/login', async (req, res) => {
       }
     };
 
+    user = {name: user.name, email: user.email, town: user.town, neighborhood: user.neighborhood}
+
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
       { expiresIn: '1h' },
       (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        res.json({user, token });
       }
     );
   } catch (err) {
@@ -112,7 +114,7 @@ router.put('/profile', auth, async (req, res) => {
     const { name, email, town, neighborhood } = req.body;
 
     // Trouver l'utilisateur par ID
-    let user = await User.findById(req.user.id);
+    let user = await User.findById(req.user.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }

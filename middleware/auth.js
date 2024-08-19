@@ -1,22 +1,33 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = function(req, res, next) {
-  // Récupérer le token du header
-  const token = req.header('x-auth-token');
-
-  // Vérifier si pas de token
-  if (!token) {
-    return res.status(401).json({ msg: 'No token, authorization denied' });
-  }
-
   try {
-    // Vérifier le token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Ajouter l'utilisateur à la requête
-    req.user = decoded.user;
-    next();
-  } catch (err) {
-    res.status(401).json({ msg: 'Token is not valid' });
+    const authHeader = req.headers['authorization'];
+    
+    // If the Authorization header is missing
+    if (!authHeader) {
+      return res.status(401).json({ msg: 'No token, authorization denied' });
+    }
+    
+    // Extract the token from the Authorization header
+    const token = authHeader.split(' ')[1];
+    
+    // If the token is not present after splitting the header
+    if (!token) {
+      return res.status(401).json({ msg: 'No token, authorization denied' });
+    }
+    
+    // Verify the token
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({ msg: 'Token is not valid' });
+      }
+      
+      // Add the decoded user to the request
+      req.user = decoded.user;
+      next(); // Proceed to the next middleware or route handler
+    });
+  } catch (error) {
+    return res.status(401).json({ msg: 'No token, authorization denied' });
   }
 };
