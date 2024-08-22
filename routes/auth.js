@@ -78,13 +78,15 @@ router.post('/login', async (req, res) => {
       }
     };
 
+    user = {name: user.name, email: user.email, town: user.town, neighborhood: user.neighborhood}
+
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
       { expiresIn: '1h' },
       (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        res.json({user, token });
       }
     );
   } catch (err) {
@@ -94,6 +96,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Route pour obtenir les informations de l'utilisateur
+// auth param to protect the route(auth middleware)
 router.get('/user', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
@@ -105,12 +108,13 @@ router.get('/user', auth, async (req, res) => {
 });
 
 // Route pour mettre à jour le profil de l'utilisateur
+// auth param to protect the route(auth middleware)
 router.put('/profile', auth, async (req, res) => {
   try {
     const { name, email, town, neighborhood } = req.body;
 
     // Trouver l'utilisateur par ID
-    let user = await User.findById(req.user.id);
+    let user = await User.findById(req.user.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
