@@ -2,7 +2,13 @@ const Listing = require('../models/Listing');
 
 exports.createListing = async (req, res) => {
   try {
-    const { title, description, price, mainCategory, subCategory, subSubCategory, image } = req.body;
+    const { title, description, price, mainCategory, subCategory, subSubCategory, images } = req.body;
+
+    // Verify that all required fields are filled
+    if (!title || !description || !price || !mainCategory || !subCategory || !subSubCategory || !images) {
+      return res.status(400).json({ message: 'Please fill in all required fields' });
+    }
+
     const listing = new Listing({
       title,
       description,
@@ -10,9 +16,10 @@ exports.createListing = async (req, res) => {
       mainCategory,
       subCategory,
       subSubCategory,
-      image,
+      images,
       createdBy: req.user.id
     });
+
     await listing.save();
     res.status(201).json(listing);
   } catch (err) {
@@ -43,7 +50,7 @@ exports.getListing = async (req, res) => {
 
 exports.updateListing = async (req, res) => {
   try {
-    const { title, description, price, mainCategory, subCategory, subSubCategory, image } = req.body;
+    const { title, description, price, mainCategory, subCategory, subSubCategory, images } = req.body;
     const listing = await Listing.findById(req.params.id);
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
@@ -57,7 +64,7 @@ exports.updateListing = async (req, res) => {
     listing.mainCategory = mainCategory || listing.mainCategory;
     listing.subCategory = subCategory || listing.subCategory;
     listing.subSubCategory = subSubCategory || listing.subSubCategory;
-    listing.image = image || listing.image;
+    listing.images = images || listing.images;
     listing.updated = Date.now();
     await listing.save();
     res.json(listing);

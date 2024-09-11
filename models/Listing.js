@@ -24,9 +24,9 @@ const listingSchema = new mongoose.Schema({
   subSubCategory: {
     type: String
   },
-  image: {
-    type: String
-  },
+  images: [
+    { type: String }
+  ],
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
