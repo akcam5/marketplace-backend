@@ -7,9 +7,14 @@ exports.createListing = async (req, res) => {
   try {
     const { title, description, price, mainCategory, subCategory, subSubCategory, images } = req.body;
 
-    // Verify that all required fields are filled
-    if (!title || !description || !price || !mainCategory || !subCategory || !subSubCategory || !images) {
+    // Verification to allow a price of 0
+    if (!title || !description || price === undefined || price === null || !mainCategory || !subCategory || !subSubCategory || !images) {
       return res.status(400).json({ message: 'Please fill in all required fields' });
+    }
+
+    // Additional verification to ensure the price is a non-negative number
+    if (typeof price !== 'number' || price < 0) {
+      return res.status(400).json({ message: 'Price must be a non-negative number' });
     }
 
     const listing = new Listing({
