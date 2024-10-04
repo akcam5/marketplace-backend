@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
+const listingsRoutes = require('./routes/listings');
 
 const app = express();
 
@@ -17,12 +18,13 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 
 // Log every new request in the terminal
 app.use((req, res, next) => {
-    console.log(`New request: ${req.method} ${req.url}`);
+    console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
     next();
 });
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/listings', listingsRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
