@@ -164,8 +164,8 @@ exports.updateListingImages = async (req, res) => {
 
     // Ajout de nouvelles images
     if (imagesToAdd && imagesToAdd.length > 0) {
-      if (listing.images.length + imagesToAdd.length > 5) {
-        return res.status(400).json({ message: 'Le nombre total d\'images ne peut pas dépasser 5' });
+      if (listing.images.length + imagesToAdd.length > 10) {
+        return res.status(400).json({ message: 'Le nombre total d\'images ne peut pas dépasser 10' });
       }
       listing.images = [...listing.images, ...imagesToAdd];
     }

@@ -2,7 +2,7 @@ const { s3Client, Upload } = require('../config/awsConfig');
 const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const upload = require('../middleware/s3Upload');
 
-exports.uploadImages = upload.array('images', 5);
+exports.uploadImages = upload.array('images', 10);
 
 exports.handleUpload = async (req, res) => {
   if (!req.files || req.files.length === 0) {
