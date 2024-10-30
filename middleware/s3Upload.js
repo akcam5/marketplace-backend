@@ -15,7 +15,7 @@ const upload = multer({
   }),
   limits: {
     fileSize: 5 * 1024 * 1024, // limite à 5MB
-    files: 5 // limite à 5 fichiers
+    files: 10 // limite à 10 fichiers
   },
   fileFilter: function(req, file, cb) {
     if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
