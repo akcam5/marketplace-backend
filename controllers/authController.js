@@ -34,6 +34,8 @@ exports.createUser = async (req, res) => {
             id: user.id
           }
         };
+
+        user = {_id:user.id, name: user.name, email: user.email, town: user.town, neighborhood: user.neighborhood}
     
         jwt.sign(
           payload,
@@ -41,7 +43,7 @@ exports.createUser = async (req, res) => {
           { expiresIn: '1h' },
           (err, token) => {
             if (err) throw err;
-            res.json({ token });
+            res.json({token, user});
           }
         );
       } catch (err) {
@@ -73,7 +75,7 @@ exports.loginUser = async (req, res) => {
           }
         };
     
-        user = {name: user.name, email: user.email, town: user.town, neighborhood: user.neighborhood}
+        user = {_id:user._id, name: user.name, email: user.email, town: user.town, neighborhood: user.neighborhood}
     
         jwt.sign(
           payload,
