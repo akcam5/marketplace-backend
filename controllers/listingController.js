@@ -21,6 +21,7 @@ exports.createListing = async (req, res) => {
       title,
       description,
       price,
+      state: 'active',
       mainCategory,
       subCategory,
       subSubCategory,
@@ -36,6 +37,9 @@ exports.createListing = async (req, res) => {
 };
 
 exports.getListings = async (req, res) => {
+  //TODO: Add pagination
+  //TODO: Add sorting
+  //TODO: filter out sold listings
   try {
     const listings = await Listing.find().populate('createdBy', 'name');
     res.json(listings);
@@ -60,12 +64,12 @@ exports.getListing = async (req, res) => {
 //Check updateListingImages function for updating the images
 exports.updateListing = async (req, res) => {
   try {
-    const { title, description, price, mainCategory, subCategory, subSubCategory, images } = req.body;
-    const listing = await Listing.findById(req.params.id);
+    const { title, description, price, mainCategory, subCategory, subSubCategory, state, images } = req.body;
+    const listing = await Listing.findById(req.params.id).populate('createdBy', 'name phoneNumber');
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
     }
-    if (listing.createdBy.toString() !== req.user.id) {
+    if (listing.createdBy?._id.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized to modify this listing' });
     }
     listing.title = title || listing.title;
@@ -74,6 +78,7 @@ exports.updateListing = async (req, res) => {
     listing.mainCategory = mainCategory || listing.mainCategory;
     listing.subCategory = subCategory || listing.subCategory;
     listing.subSubCategory = subSubCategory || listing.subSubCategory;
+    listing.state = state || listing.state;
     listing.images = images || listing.images;
     listing.updated = Date.now();
     await listing.save();
@@ -100,6 +105,7 @@ exports.deleteListing = async (req, res) => {
 };
 
 exports.searchListings = async (req, res) => {
+  //TODO: filter out sold listings
   try {
     const { keyword, mainCategory, subCategory, subSubCategory, minPrice, maxPrice } = req.query;
     let query = {};

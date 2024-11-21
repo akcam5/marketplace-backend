@@ -9,6 +9,7 @@ router.get('/', listingController.getListings);
 router.get('/search', listingController.searchListings);
 router.get('/:id', listingController.getListing);
 router.put('/:id', auth, listingController.updateListing);
+router.put('/:id/state', auth, listingController.updateListing);
 router.delete('/:id', auth, listingController.deleteListing);
 
 // images upload
