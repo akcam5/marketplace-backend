@@ -132,7 +132,7 @@ exports.getMessages = async (req, res) => {
     const messages = await Message.find(query)
       .populate({
         path: 'sender',
-        select: 'username email' // Ne sélectionner que les champs nécessaires
+        select: 'username email name' // Ne sélectionner que les champs nécessaires
       })
       .sort({ createdAt: after ? 1 : -1 }) // Ordre chronologique pour les nouveaux messages, anti-chronologique pour l'historique
       .skip(!after ? (Number(page) - 1) * Number(limit) : 0) // Skip seulement pour la pagination de l'historique

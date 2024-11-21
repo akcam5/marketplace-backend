@@ -104,10 +104,9 @@ exports.deleteListing = async (req, res) => {
 };
 
 exports.searchListings = async (req, res) => {
-  //TODO: filter out sold listings
   try {
     const { keyword, mainCategory, subCategory, subSubCategory, minPrice, maxPrice } = req.query;
-    let query = {};
+    let query = { state: { $ne: 'sold' } }; // Filter out sold listings
 
     if (keyword) {
       query.$or = [
