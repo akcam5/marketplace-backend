@@ -43,7 +43,7 @@ exports.getConversations = async (req, res) => {
     const conversations = await Conversation.find({
       participants: req.user.id
     })
-    .populate('participants', 'username email')
+    .populate('participants', 'name email')
     .populate('listing', 'title price images')
     .sort({ lastMessage: -1 });
 
@@ -104,43 +104,97 @@ exports.sendMessage = async (req, res) => {
 exports.getMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
-    const { page = 1, limit = 50 } = req.query;
-    
+    const { page = 1, limit = 50, after } = req.query;
+    const userId = req.user.id;
+
+    // Vérifier si l'utilisateur a accès à la conversation
     const conversation = await Conversation.findOne({
       _id: conversationId,
-      participants: req.user.id
+      participants: userId
     });
 
     if (!conversation) {
-      return res.status(403).json({ message: 'Access denied to this conversation' });
+      return res.status(403).json({ 
+        success: false,
+        message: 'Access denied to this conversation' 
+      });
     }
 
-    const messages = await Message.find({ conversation: conversationId })
-      .populate('sender', 'username email')
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
+    // Construire la requête de base
+    let query = { conversation: conversationId };
+    
+    // Si 'after' est spécifié, ne récupérer que les nouveaux messages
+    if (after) {
+      query.createdAt = { $gt: new Date(after) };
+    }
 
-    const total = await Message.countDocuments({ conversation: conversationId });
+    // Récupérer les messages avec pagination et population
+    const messages = await Message.find(query)
+      .populate({
+        path: 'sender',
+        select: 'username email' // Ne sélectionner que les champs nécessaires
+      })
+      .sort({ createdAt: after ? 1 : -1 }) // Ordre chronologique pour les nouveaux messages, anti-chronologique pour l'historique
+      .skip(!after ? (Number(page) - 1) * Number(limit) : 0) // Skip seulement pour la pagination de l'historique
+      .limit(Number(limit))
+      .lean(); // Utiliser lean() pour de meilleures performances
 
+    // Compter le nombre total de messages pour la pagination
+    // Ne pas compter si on cherche juste les nouveaux messages
+    let total = 0;
+    if (!after) {
+      total = await Message.countDocuments({ conversation: conversationId });
+    }
+
+    // Marquer les messages non lus comme lus
+    // Note: On fait ça après la requête principale pour ne pas bloquer la réponse
     await Message.updateMany(
       {
         conversation: conversationId,
-        sender: { $ne: req.user.id },
+        sender: { $ne: userId },
         read: false
       },
-      { $set: { read: true } }
-    );
+      { 
+        $set: { 
+          read: true,
+          readAt: new Date()
+        } 
+      }
+    ).exec();
 
-    res.json({
-      messages: messages.reverse(),
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      hasMore: page * limit < total
-    });
+    // Préparer la réponse
+    const response = {
+      messages: after ? messages : messages.reverse(), // Inverser l'ordre pour l'historique
+      success: true
+    };
+
+    // Ajouter les informations de pagination seulement si nécessaire
+    if (!after) {
+      response.pagination = {
+        totalMessages: total,
+        totalPages: Math.ceil(total / Number(limit)),
+        currentPage: Number(page),
+        hasMore: page * limit < total,
+        messagesPerPage: Number(limit)
+      };
+    }
+
+    // Ajouter des métadonnées utiles
+    response.metadata = {
+      conversationId,
+      lastMessageAt: messages.length > 0 ? messages[messages.length - 1].createdAt : null,
+      messageCount: messages.length
+    };
+
+    res.json(response);
+
   } catch (error) {
-    console.error('Error fetching messages:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error in getMessages:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while fetching messages',
+      error: error.message
+    });
   }
 };
 

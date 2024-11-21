@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 exports.createUser = async (req, res) => {
     try {
-        const { name, email, password, town, neighborhood } = req.body;
+        const { name, email, password, town, neighborhood, phoneNumber } = req.body;
     
         // Vérifier si l'utilisateur existe déjà
         let user = await User.findOne({ email });
@@ -18,7 +18,8 @@ exports.createUser = async (req, res) => {
           email,
           password,
           town,
-          neighborhood
+          neighborhood,
+          phoneNumber
         });
     
         // Hasher le mot de passe
@@ -34,6 +35,8 @@ exports.createUser = async (req, res) => {
             id: user.id
           }
         };
+
+        user = {_id:user.id, name: user.name, email: user.email, town: user.town, neighborhood: user.neighborhood, phoneNumber: user.phoneNumber, profilePicture: user.profilePicture}
     
         jwt.sign(
           payload,
@@ -41,7 +44,7 @@ exports.createUser = async (req, res) => {
           { expiresIn: '1h' },
           (err, token) => {
             if (err) throw err;
-            res.json({ token });
+            res.json({token, user});
           }
         );
       } catch (err) {
@@ -73,7 +76,7 @@ exports.loginUser = async (req, res) => {
           }
         };
     
-        user = {name: user.name, email: user.email, town: user.town, neighborhood: user.neighborhood}
+        user = {_id:user._id, name: user.name, email: user.email, town: user.town, neighborhood: user.neighborhood, phoneNumber: user.phoneNumber, profilePicture: user.profilePicture}
     
         jwt.sign(
           payload,
@@ -102,7 +105,7 @@ exports.getUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     try {
-        const { name, email, town, neighborhood } = req.body;
+        const { name, email, town, neighborhood, phoneNumber, profilePicture } = req.body;
     
         // Trouver l'utilisateur par ID
         let user = await User.findById(req.user.id).select('-password');
@@ -115,6 +118,8 @@ exports.updateUser = async (req, res) => {
         user.email = email || user.email;
         user.town = town || user.town;
         user.neighborhood = neighborhood || user.neighborhood;
+        user.phoneNumber = phoneNumber || user.phoneNumber;
+        user.profilePicture = profilePicture || user.profilePicture;
     
         // Sauvegarder les modifications
         await user.save();
