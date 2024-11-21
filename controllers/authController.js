@@ -119,7 +119,11 @@ exports.updateUser = async (req, res) => {
         user.town = town || user.town;
         user.neighborhood = neighborhood || user.neighborhood;
         user.phoneNumber = phoneNumber || user.phoneNumber;
-        user.profilePicture = profilePicture || user.profilePicture;
+        if (profilePicture === "") {
+            user.profilePicture = undefined;
+        } else {
+            user.profilePicture = profilePicture || user.profilePicture;
+        }
     
         // Sauvegarder les modifications
         await user.save();

@@ -13,6 +13,11 @@ const listingSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  state: {
+    type: String,
+    enum: ['active', 'onhold', 'sold'],
+    required: true
+  },
   mainCategory: {
     type: String,
     required: true
