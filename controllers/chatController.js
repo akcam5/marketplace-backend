@@ -44,7 +44,7 @@ exports.getConversations = async (req, res) => {
       participants: req.user.id
     })
     .populate('participants', 'name email')
-    .populate('listing', 'title price images')
+    .populate('listing', 'title price images state')
     .sort({ lastMessage: -1 });
 
     const conversationsWithUnread = await Promise.all(conversations.map(async (conv) => {
