@@ -39,9 +39,8 @@ exports.createListing = async (req, res) => {
 exports.getListings = async (req, res) => {
   //TODO: Add pagination
   //TODO: Add sorting
-  //TODO: filter out sold listings
   try {
-    const listings = await Listing.find().populate('createdBy', 'name');
+    const listings = await Listing.find({ state: { $ne: 'sold' } }).populate('createdBy', 'name');
     res.json(listings);
   } catch (err) {
     res.status(500).json({ message: 'Error while fetching the listings', error: err.message });
