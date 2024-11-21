@@ -46,7 +46,7 @@ exports.getListings = async (req, res) => {
 
 exports.getListing = async (req, res) => {
   try {
-    const listing = await Listing.findById(req.params.id).populate('createdBy', 'name');
+    const listing = await Listing.findById(req.params.id).populate('createdBy', 'name phoneNumber');
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
     }
