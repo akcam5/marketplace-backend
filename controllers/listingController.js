@@ -1,4 +1,5 @@
 const Listing = require('../models/Listing');
+const User = require('../models/User');
 const { s3Client } = require('../config/awsConfig');
 const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
@@ -49,13 +50,41 @@ exports.getListings = async (req, res) => {
 
 exports.getListing = async (req, res) => {
   try {
-    const listing = await Listing.findById(req.params.id).populate('createdBy', 'name phoneNumber');
+    const listing = await Listing.findById(req.params.id).populate('createdBy', 'name phoneNumber profilePicture town');
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
     }
     res.json(listing);
   } catch (err) {
     res.status(500).json({ message: 'Error while fetching the listing', error: err.message });
+  }
+};
+
+// Get listings by seller ID
+exports.getSellerListings = async (req, res) => {
+  try {
+    const sellerId = req.params.sellerId;
+
+    const seller = await User.findById(sellerId).select('name profilePicture');
+    if (!seller) {
+      return res.status(404).json({ message: 'Seller not found' });
+    }
+
+    const listings = await Listing.find({ createdBy: sellerId })
+      .sort({ createdAt: -1 }); // Sort by newest first
+
+    res.json({
+      seller: {
+      ...seller.toObject(),
+      listingsCount: listings.length
+      },
+      listings
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      message: 'Error while fetching seller listings', 
+      error: err.message 
+    });
   }
 };
 
