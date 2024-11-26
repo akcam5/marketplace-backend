@@ -8,6 +8,7 @@ router.post('/', auth, listingController.createListing);
 router.get('/', listingController.getListings);
 router.get('/search', listingController.searchListings);
 router.get('/:id', listingController.getListing);
+router.get('/seller/:sellerId', listingController.getSellerListings);
 router.put('/:id', auth, listingController.updateListing);
 router.put('/:id/state', auth, listingController.updateListing);
 router.delete('/:id', auth, listingController.deleteListing);
