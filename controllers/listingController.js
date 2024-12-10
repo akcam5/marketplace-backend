@@ -50,7 +50,7 @@ exports.getListings = async (req, res) => {
 
 exports.getListing = async (req, res) => {
   try {
-    const listing = await Listing.findById(req.params.id).populate('createdBy', 'name phoneNumber profilePicture town');
+    const listing = await Listing.findById(req.params.id).populate('createdBy', 'name phoneNumber profilePicture town neighborhood');
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
     }
@@ -65,7 +65,7 @@ exports.getSellerListings = async (req, res) => {
   try {
     const sellerId = req.params.sellerId;
 
-    const seller = await User.findById(sellerId).select('name profilePicture');
+    const seller = await User.findById(sellerId).select('name profilePicture town neighborhood');
     if (!seller) {
       return res.status(404).json({ message: 'Seller not found' });
     }
