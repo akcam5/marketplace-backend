@@ -65,7 +65,38 @@ const sendPasswordResetEmail = async (email, resetURL) => {
     }
 };
 
+const sendNewMessageNotification = async (recipientEmail, senderName) => {
+    try {
+        const data = await resend.emails.send({
+            from: 'Kadeel <contact@kadeel.com>',
+            to: recipientEmail,
+            subject: 'Nouveaux messages de ' + senderName,
+            html: `
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; color: #333;">
+                    <div style="text-align: center; padding: 20px 0;">
+                        <h1 style="color: #71A1A4; margin: 0; font-size: 24px;">Vous avez de nouveaux messages</h1>
+                    </div>
+                    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0;">
+                        <p style="font-size: 16px; line-height: 1.5;"><strong>${senderName}</strong> vous a envoyé de nouveaux messages.</p>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="${process.env.FRONTEND_URL}/chat" style="display: inline-block; padding: 12px 24px; background-color: #71A1A4; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: background-color 0.3s;">Voir la conversation</a>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #999;">
+                        <p>Cet email a été envoyé automatiquement. Merci de ne pas y répondre.</p>
+                    </div>
+                </div>
+            `
+        });
+        return { success: true, data };
+    } catch (error) {
+        console.error('Message notification email error:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     sendEmail,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    sendNewMessageNotification
 }; 
