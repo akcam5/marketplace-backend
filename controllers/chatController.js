@@ -1,6 +1,8 @@
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const Listing = require('../models/Listing');
+const User = require('../models/User');
+const { sendNewMessageNotification } = require('./emailController');
 
 exports.createConversation = async (req, res) => {
   try {
@@ -70,24 +72,99 @@ exports.getConversations = async (req, res) => {
 exports.sendMessage = async (req, res) => {
   try {
     const { conversationId, content } = req.body;
+    const userId = req.user.id;
 
+    // Vérifier l'accès à la conversation
     const conversation = await Conversation.findOne({
       _id: conversationId,
-      participants: req.user.id
-    });
+      participants: userId
+    }).populate('participants', 'username email name');
 
     if (!conversation) {
       return res.status(403).json({ message: 'Access denied to this conversation' });
     }
 
+    // Trouver le destinataire du message (l'autre participant)
+    const recipient = conversation.participants.find(p => p._id.toString() !== userId.toString());
+    
+    // Vérifier si une notification doit être envoyée
+    let shouldSendNotification = false;
+    
+    if (recipient) {
+      console.log(`Destinataire identifié: ${recipient.email}, ID: ${recipient._id}`);
+      
+      // Vérifier s'il y a des messages précédents dans la conversation
+      const messageCount = await Message.countDocuments({ 
+        conversation: conversationId 
+      });
+      
+      console.log(`Nombre total de messages dans la conversation: ${messageCount}`);
+      
+      // Configuration du délai minimum pour envoyer une notification (en minutes)
+      const notificationThreshold = process.env.MESSAGE_NOTIFICATION_THRESHOLD 
+        ? parseInt(process.env.MESSAGE_NOTIFICATION_THRESHOLD) 
+        : 30; // 30 minutes par défaut
+      
+      console.log(`Seuil de notification configuré: ${notificationThreshold} minutes`);
+      
+      // Si c'est le premier message de la conversation, toujours envoyer une notification
+      if (messageCount === 0) {
+        console.log("Premier message de la conversation - envoi d'une notification");
+        shouldSendNotification = true;
+      } else {
+        // Trouver le dernier message envoyé par cet expéditeur au destinataire
+        const lastSentMessage = await Message.findOne({
+          conversation: conversationId,
+          sender: userId
+        }).sort({ createdAt: -1 });
+        
+        if (!lastSentMessage) {
+          // Premier message de cet expéditeur dans cette conversation
+          console.log("Premier message de cet expéditeur - envoi d'une notification");
+          shouldSendNotification = true;
+        } else {
+          // Calculer le temps écoulé depuis le dernier message
+          const messageAge = new Date() - lastSentMessage.createdAt;
+          const messageAgeMinutes = Math.floor(messageAge / (60 * 1000));
+          
+          console.log(`Dernier message de l'expéditeur date de ${messageAgeMinutes} minutes et est ${lastSentMessage.read ? 'lu' : 'non lu'}`);
+          
+          // Envoyer une notification si le dernier message est non lu ET date de plus de X minutes
+          shouldSendNotification = 
+            !lastSentMessage.read && 
+            messageAge > (notificationThreshold * 60 * 1000);
+          
+          console.log(`Doit envoyer une notification: ${shouldSendNotification ? 'Oui' : 'Non'}`);
+        }
+      }
+      
+      // Envoyer la notification si nécessaire
+      if (shouldSendNotification) {
+        try {
+          // Récupérer l'expéditeur pour obtenir son nom
+          const sender = await User.findById(userId);
+          const senderName = sender ? (sender.name || sender.username || "Utilisateur") : "Utilisateur";
+          
+          await sendNewMessageNotification(
+            recipient.email, 
+            senderName
+          );
+          console.log(`Notification envoyée à ${recipient.email}`);
+        } catch (err) {
+          console.error('Erreur lors de l\'envoi de la notification:', err);
+        }
+      }
+    }
+    
+    // Créer et sauvegarder le nouveau message
     const message = new Message({
       conversation: conversationId,
-      sender: req.user.id,
+      sender: userId,
       content
     });
-
     await message.save();
 
+    // Mettre à jour lastMessage de la conversation
     conversation.lastMessage = Date.now();
     await conversation.save();
 
