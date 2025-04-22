@@ -7,6 +7,7 @@ const auth = require('../middleware/auth');
 router.post('/', auth, listingController.createListing);
 router.get('/', listingController.getListings);
 router.get('/search', listingController.searchListings);
+router.get('/recent', listingController.getRecentListings);
 router.get('/:id', listingController.getListing);
 router.get('/seller/:sellerId', listingController.getSellerListings);
 router.put('/:id', auth, listingController.updateListing);

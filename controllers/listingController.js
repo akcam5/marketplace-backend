@@ -211,3 +211,16 @@ exports.updateListingImages = async (req, res) => {
     res.status(500).json({ message: 'Erreur lors de la mise à jour des images de l\'annonce', error: err.message });
   }
 };
+
+exports.getRecentListings = async (req, res) => {
+  try {
+    const recentListings = await Listing.find({ state: { $ne: 'sold' } })
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .populate('createdBy', 'name');
+    
+    res.json(recentListings);
+  } catch (err) {
+    res.status(500).json({ message: 'Error while fetching recent listings', error: err.message });
+  }
+};
