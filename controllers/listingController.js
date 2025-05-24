@@ -137,7 +137,7 @@ exports.getSellerListings = async (req, res) => {
     }
 
     const listings = await Listing.find({ createdBy: sellerId })
-      .sort({ createdAt: -1 }); // Sort by newest first
+      .sort({ created: -1 }); // Sort by newest first
 
     res.json({
       seller: {
@@ -200,7 +200,45 @@ exports.deleteListing = async (req, res) => {
 
 exports.searchListings = async (req, res) => {
   try {
-    const { keyword, mainCategory, subCategory, subSubCategory, minPrice, maxPrice } = req.query;
+    const { keyword, mainCategory, subCategory, subSubCategory, minPrice, maxPrice, page, limit, sortBy } = req.query;
+    
+    // Extract pagination and sorting parameters with defaults for backward compatibility
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 0; // 0 means no limit (backward compatible)
+    const sortByParam = sortBy || 'recent'; // recent, older, priceAsc, priceDesc
+    
+    // Validate page and limit
+    if (pageNum < 1) {
+      return res.status(400).json({ message: 'Page number must be greater than 0' });
+    }
+    if (limitNum < 0) {
+      return res.status(400).json({ message: 'Limit must be non-negative' });
+    }
+    
+    // Calculate skip value for pagination
+    const skip = limitNum > 0 ? (pageNum - 1) * limitNum : 0;
+    
+    // Determine sort criteria with secondary sort for consistency
+    let sortCriteria = {};
+    switch (sortByParam.toLowerCase()) {
+      case 'recent':
+        sortCriteria = { created: -1, _id: -1 }; // Newest first, with _id as tiebreaker
+        break;
+      case 'older':
+        sortCriteria = { created: 1, _id: 1 }; // Oldest first, with _id as tiebreaker
+        break;
+      case 'priceasc':
+        sortCriteria = { price: 1, created: -1 }; // Price ascending, newest first for same price
+        break;
+      case 'pricedesc':
+        sortCriteria = { price: -1, created: -1 }; // Price descending, newest first for same price
+        break;
+      default:
+        // Handle invalid sortBy values gracefully
+        sortCriteria = { created: -1, _id: -1 }; // Default to recent
+    }
+    
+    // Build search query
     let query = { state: { $ne: 'sold' } }; // Filter out sold listings
 
     if (keyword) {
@@ -220,8 +258,47 @@ exports.searchListings = async (req, res) => {
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
-    const listings = await Listing.find(query).populate('createdBy', 'name');
-    res.json(listings);
+    // Build the database query with sorting
+    let dbQuery = Listing.find(query)
+      .populate('createdBy', 'name')
+      .sort(sortCriteria);
+    
+    // Apply pagination only if limit is specified
+    if (limitNum > 0) {
+      dbQuery = dbQuery.skip(skip).limit(limitNum);
+    }
+
+    const listings = await dbQuery;
+    
+    // If pagination is requested, also get total count for metadata
+    if (limitNum > 0) {
+      const totalCount = await Listing.countDocuments(query);
+      const totalPages = Math.ceil(totalCount / limitNum);
+      
+      res.json({
+        listings,
+        pagination: {
+          currentPage: pageNum,
+          totalPages,
+          totalCount,
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1,
+          limit: limitNum
+        },
+        sortBy: sortByParam,
+        searchCriteria: {
+          keyword: keyword || null,
+          mainCategory: mainCategory || null,
+          subCategory: subCategory || null,
+          subSubCategory: subSubCategory || null,
+          minPrice: minPrice ? Number(minPrice) : null,
+          maxPrice: maxPrice ? Number(maxPrice) : null
+        }
+      });
+    } else {
+      // Backward compatible response - just return the listings array
+      res.json(listings);
+    }
   } catch (err) {
     res.status(500).json({ message: 'Error while searching the listings', error: err.message });
   }
@@ -281,7 +358,7 @@ exports.updateListingImages = async (req, res) => {
 exports.getRecentListings = async (req, res) => {
   try {
     const recentListings = await Listing.find({ state: { $ne: 'sold' } })
-      .sort({ createdAt: -1 })
+      .sort({ created: -1 })
       .limit(6)
       .populate('createdBy', 'name');
     
