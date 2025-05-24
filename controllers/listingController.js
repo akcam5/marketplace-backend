@@ -38,11 +38,68 @@ exports.createListing = async (req, res) => {
 };
 
 exports.getListings = async (req, res) => {
-  //TODO: Add pagination
-  //TODO: Add sorting
   try {
-    const listings = await Listing.find({ state: { $ne: 'sold' } }).populate('createdBy', 'name');
-    res.json(listings);
+    // Extract query parameters with defaults for backward compatibility
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 0; // 0 means no limit (backward compatible)
+    const sortBy = req.query.sortBy || 'recent'; // recent, older, priceAsc, priceDesc
+    
+    // Calculate skip value for pagination
+    const skip = limit > 0 ? (page - 1) * limit : 0;
+    
+    // Determine sort criteria
+    let sortCriteria = {};
+    switch (sortBy) {
+      case 'recent':
+        sortCriteria = { createdAt: -1 }; // Newest first
+        break;
+      case 'older':
+        sortCriteria = { createdAt: 1 }; // Oldest first
+        break;
+      case 'priceAsc':
+        sortCriteria = { price: 1 }; // Price ascending
+        break;
+      case 'priceDesc':
+        sortCriteria = { price: -1 }; // Price descending
+        break;
+      default:
+        sortCriteria = { createdAt: -1 }; // Default to recent
+    }
+    
+    // Build the query
+    // We filter out sold listings
+    let query = Listing.find({ state: { $ne: 'sold' } })
+      .populate('createdBy', 'name')
+      .sort(sortCriteria);
+    
+    // Apply pagination only if limit is specified
+    if (limit > 0) {
+      query = query.skip(skip).limit(limit);
+    }
+    
+    const listings = await query;
+    
+    // If pagination is requested, also get total count for metadata
+    if (limit > 0) {
+      const totalCount = await Listing.countDocuments({ state: { $ne: 'sold' } });
+      const totalPages = Math.ceil(totalCount / limit);
+      
+      res.json({
+        listings,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalCount,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+          limit
+        },
+        sortBy
+      });
+    } else {
+      // Backward compatible response - just return the listings array
+      res.json(listings);
+    }
   } catch (err) {
     res.status(500).json({ message: 'Error while fetching the listings', error: err.message });
   }
