@@ -44,26 +44,35 @@ exports.getListings = async (req, res) => {
     const limit = parseInt(req.query.limit) || 0; // 0 means no limit (backward compatible)
     const sortBy = req.query.sortBy || 'recent'; // recent, older, priceAsc, priceDesc
     
+    // Validate page and limit
+    if (page < 1) {
+      return res.status(400).json({ message: 'Page number must be greater than 0' });
+    }
+    if (limit < 0) {
+      return res.status(400).json({ message: 'Limit must be non-negative' });
+    }
+    
     // Calculate skip value for pagination
     const skip = limit > 0 ? (page - 1) * limit : 0;
     
-    // Determine sort criteria
+    // Determine sort criteria with secondary sort for consistency
     let sortCriteria = {};
-    switch (sortBy) {
+    switch (sortBy.toLowerCase()) {
       case 'recent':
-        sortCriteria = { createdAt: -1 }; // Newest first
+        sortCriteria = { created: -1, _id: -1 }; // Newest first, with _id as tiebreaker
         break;
       case 'older':
-        sortCriteria = { createdAt: 1 }; // Oldest first
+        sortCriteria = { created: 1, _id: 1 }; // Oldest first, with _id as tiebreaker
         break;
-      case 'priceAsc':
-        sortCriteria = { price: 1 }; // Price ascending
+      case 'priceasc':
+        sortCriteria = { price: 1, created: -1 }; // Price ascending, newest first for same price
         break;
-      case 'priceDesc':
-        sortCriteria = { price: -1 }; // Price descending
+      case 'pricedesc':
+        sortCriteria = { price: -1, created: -1 }; // Price descending, newest first for same price
         break;
       default:
-        sortCriteria = { createdAt: -1 }; // Default to recent
+        // Handle invalid sortBy values gracefully
+        sortCriteria = { created: -1, _id: -1 }; // Default to recent
     }
     
     // Build the query
