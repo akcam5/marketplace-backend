@@ -95,8 +95,54 @@ const sendNewMessageNotification = async (recipientEmail, senderName) => {
     }
 };
 
+const sendWelcomeEmail = async (email, userName) => {
+    try {
+        const data = await resend.emails.send({
+            from: 'Kadeel <contact@kadeel.com>',
+            to: email,
+            subject: 'Bienvenue sur Kadeel ! 🎉',
+            html: `
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; color: #333;">
+                    <div style="text-align: center; padding: 20px 0;">
+                        <h1 style="color: #71A1A4; margin: 0; font-size: 28px;">Bienvenue sur Kadeel ! 🎉</h1>
+                    </div>
+                    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 30px; margin: 20px 0;">
+                        <p style="font-size: 18px; line-height: 1.6; margin-bottom: 20px;">Bonjour <strong>${userName}</strong>,</p>
+                        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">Félicitations ! Votre compte Kadeel a été créé avec succès. Nous sommes ravis de vous accueillir dans notre communauté de marketplace.</p>
+                        
+                        <div style="background-color: white; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 4px solid #71A1A4;">
+                            <h3 style="color: #71A1A4; margin-top: 0; font-size: 18px;">Que pouvez-vous faire maintenant ?</h3>
+                            <ul style="font-size: 15px; line-height: 1.6; padding-left: 20px;">
+                                <li style="margin-bottom: 8px;">📝 Créer votre première annonce</li>
+                                <li style="margin-bottom: 8px;">🔍 Explorer les produits disponibles</li>
+                                <li style="margin-bottom: 8px;">💬 Contacter les vendeurs</li>
+                                <li style="margin-bottom: 8px;">👤 Compléter votre profil</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="${process.env.FRONTEND_URL}" style="display: inline-block; padding: 15px 30px; background-color: #71A1A4; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); transition: background-color 0.3s;">Commencer à explorer</a>
+                        </div>
+                        
+                        <p style="font-size: 14px; line-height: 1.5; color: #666; margin-top: 25px; text-align: center;">Si vous avez des questions, n'hésitez pas à nous contacter. Nous sommes là pour vous aider !</p>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #999;">
+                        <p>Merci de faire partie de la communauté Kadeel !</p>
+                        <p>Cet email a été envoyé automatiquement. Merci de ne pas y répondre.</p>
+                    </div>
+                </div>
+            `
+        });
+        return { success: true, data };
+    } catch (error) {
+        console.error('Welcome email error:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     sendEmail,
     sendPasswordResetEmail,
-    sendNewMessageNotification
+    sendNewMessageNotification,
+    sendWelcomeEmail
 }; 

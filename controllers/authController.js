@@ -2,7 +2,7 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { sendPasswordResetEmail } = require('./emailController');
+const { sendPasswordResetEmail, sendWelcomeEmail } = require('./emailController');
 
 const createPasswordResetToken = async (user) => {
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -54,6 +54,15 @@ exports.createUser = async (req, res) => {
     
         // Sauvegarder l'utilisateur
         await user.save();
+
+        // Send welcome email (don't block registration if email fails)
+        try {
+          await sendWelcomeEmail(email, name);
+          console.log(`Welcome email sent to ${email}`);
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+          // Continue with registration even if email fails
+        }
     
         // Créer et retourner le token JWT
         const payload = {
