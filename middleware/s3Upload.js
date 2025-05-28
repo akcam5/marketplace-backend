@@ -18,7 +18,7 @@ const upload = multer({
     files: 10 // limite à 10 fichiers
   },
   fileFilter: function(req, file, cb) {
-    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|avif)$/i)) {
       return cb(new Error('Seuls les fichiers image sont autorisés!'), false);
     }
     cb(null, true);
