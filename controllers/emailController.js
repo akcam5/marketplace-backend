@@ -42,12 +42,12 @@ const sendPasswordResetEmail = async (email, resetURL) => {
             html: `
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; color: #333;">
                     <div style="text-align: center; padding: 20px 0;">
-                        <h1 style="color: #007bff; margin: 0; font-size: 24px;">Demande de réinitialisation de mot de passe</h1>
+                        <h1 style="color: #71A1A4; margin: 0; font-size: 24px;">Demande de réinitialisation de mot de passe</h1>
                     </div>
                     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0;">
                         <p style="font-size: 16px; line-height: 1.5;">Vous avez demandé une réinitialisation de mot de passe. Cliquez sur le bouton ci-dessous pour réinitialiser votre mot de passe :</p>
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="${resetURL}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: background-color 0.3s;">Réinitialiser le mot de passe</a>
+                            <a href="${resetURL}" style="display: inline-block; padding: 12px 24px; background-color: #71A1A4; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: background-color 0.3s;">Réinitialiser le mot de passe</a>
                         </div>
                         <p style="font-size: 16px; line-height: 1.5; color: #666;">Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer cet email.</p>
                         <p style="font-size: 14px; color: #999; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">Ce lien de réinitialisation expirera dans 10 minutes.</p>
