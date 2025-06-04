@@ -131,7 +131,7 @@ exports.getSellerListings = async (req, res) => {
   try {
     const sellerId = req.params.sellerId;
 
-    const seller = await User.findById(sellerId).select('name profilePicture town neighborhood createdAt');
+    const seller = await User.findById(sellerId).select('name profilePicture town neighborhood createdAt phoneNumber');
     if (!seller) {
       return res.status(404).json({ message: 'Seller not found' });
     }
