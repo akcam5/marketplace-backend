@@ -4,6 +4,7 @@ const User = require('./models/User');
 const Listing = require('./models/Listing');
 const Conversation = require('./models/Conversation');
 const Message = require('./models/Message');
+const { deleteS3Image, deleteS3Images } = require('./config/awsUtils');
 
 // Function to delete all user data based on email
 async function deleteUserData(email) {
@@ -33,6 +34,14 @@ async function deleteUserData(email) {
     const deletedListings = await Listing.find({ createdBy: userId });
     const listingIds = deletedListings.map(listing => listing._id);
     console.log(`Found ${deletedListings.length} listings to delete`);
+    
+    // Delete all listing images from S3
+    for (const listing of deletedListings) {
+      if (listing.images && listing.images.length > 0) {
+        await deleteS3Images(listing.images);
+        console.log(`Deleted ${listing.images.length} images for listing ${listing._id}`);
+      }
+    }
     
     // Step 2: Find and delete all conversations related to the user
     // This includes conversations where the user is a participant or related to user's listings
@@ -64,6 +73,12 @@ async function deleteUserData(email) {
     // Step 5: Delete all listings
     const listingsDeleted = await Listing.deleteMany({ createdBy: userId });
     console.log(`Deleted ${listingsDeleted.deletedCount} listings`);
+    
+    // Delete user's profile picture if it exists
+    if (user.profilePicture) {
+      await deleteS3Image(user.profilePicture);
+      console.log('Deleted user profile picture');
+    }
     
     // Step 6: Finally delete the user
     await User.deleteOne({ _id: userId });

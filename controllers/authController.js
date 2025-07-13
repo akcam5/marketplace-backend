@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendPasswordResetEmail, sendWelcomeEmail } = require('./emailController');
+const { deleteS3Image } = require('../config/awsUtils');
 
 const createPasswordResetToken = async (user) => {
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -146,6 +147,11 @@ exports.updateUser = async (req, res) => {
         let user = await User.findById(req.user.id).select('-password');
         if (!user) {
           return res.status(404).json({ message: 'User not found' });
+        }
+    
+        // Always delete the old profile picture if a new one is provided in the request
+        if (profilePicture !== undefined && user.profilePicture) {
+          await deleteS3Image(user.profilePicture);
         }
     
         // Mettre à jour les champs
