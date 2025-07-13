@@ -208,7 +208,7 @@ Le système de messagerie inclut une fonctionnalité de notification email intel
 
 ### Spécifications de Téléchargement
 - **Formats Supportés**: JPG, JPEG, PNG, GIF
-- **Limite de Taille**: 5MB par image
+- **Limite de Taille**: 15MB par image
 - **Images Maximum**: 10 par annonce
 - **Stockage**: AWS S3 avec nommage de fichier unique
 
@@ -270,7 +270,7 @@ Le système de messagerie inclut une fonctionnalité de notification email intel
 
 ### Sécurité de Téléchargement de Fichiers
 - **Validation de Type de Fichier**: Restrictions de format d'image
-- **Limites de Taille**: Protection de 5MB par fichier
+- **Limites de Taille**: Protection de 15MB par fichier
 - **Stockage Sécurisé**: AWS S3 avec permissions appropriées
 - **Nettoyage**: Suppression automatique des fichiers inutilisés
 

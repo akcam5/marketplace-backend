@@ -207,7 +207,7 @@ The messaging system includes an intelligent email notification feature:
 
 ### Upload Specifications
 - **Supported Formats**: JPG, JPEG, PNG, GIF
-- **File Size Limit**: 5MB per image
+- **File Size Limit**: 15MB per image
 - **Maximum Images**: 10 per listing
 - **Storage**: AWS S3 with unique file naming
 
@@ -269,7 +269,7 @@ The messaging system includes an intelligent email notification feature:
 
 ### File Upload Security
 - **File Type Validation**: Image format restrictions
-- **Size Limits**: 5MB per file protection
+- **Size Limits**: 15MB per file protection
 - **Secure Storage**: AWS S3 with proper permissions
 - **Cleanup**: Automatic removal of unused files
 
