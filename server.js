@@ -7,9 +7,22 @@ const listingsRoutes = require('./routes/listings');
 const chatRoutes = require('./routes/chat');
 const emailRoutes = require('./routes/email');
 const app = express();
+const rateLimit = require('express-rate-limit');
 
 // Middleware
-app.use(cors());
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // max 10 tentatives par 15 minutes
+  message: { message: 'Trop de tentatives de connexion. Réessayez dans 15 minutes.' }
+});
+
+app.use('/api/auth/login', loginLimiter);
+
+app.use(cors({
+  origin: 'https://kadeel.com',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Connect to MongoDB

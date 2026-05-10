@@ -169,7 +169,7 @@ exports.updateListing = async (req, res) => {
     }
     listing.title = title || listing.title;
     listing.description = description || listing.description;
-    listing.price = price || listing.price;
+    listing.price = price !== undefined ? price : listing.price;
     listing.mainCategory = mainCategory || listing.mainCategory;
     listing.subCategory = subCategory || listing.subCategory;
     listing.subSubCategory = subSubCategory || listing.subSubCategory;
@@ -249,9 +249,10 @@ exports.searchListings = async (req, res) => {
     let query = { state: { $ne: 'sold' } }; // Filter out sold listings
 
     if (keyword) {
+      const safeKeyword = keyword.slice(0, 100);
       query.$or = [
-        { title: { $regex: keyword, $options: 'i' } },
-        { description: { $regex: keyword, $options: 'i' } }
+        { title: { $regex: safeKeyword, $options: 'i' } },
+        { description: { $regex: safeKeyword, $options: 'i' } }
       ];
     }
 

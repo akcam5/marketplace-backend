@@ -33,6 +33,10 @@ const hashPassword = async (password) => {
 exports.createUser = async (req, res) => {
     try {
         const { name, email, password, town, neighborhood, phoneNumber } = req.body;
+
+        if (!password || password.length < 8) {
+          return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 8 caractères' });
+        }
     
         // Vérifier si l'utilisateur existe déjà
         let user = await User.findOne({ email });
@@ -189,9 +193,9 @@ exports.forgotPassword = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'No user found with this email address'
+            return res.status(200).json({
+                success: true,
+                message: 'If this email exists, a reset link has been sent'
             });
         }
 

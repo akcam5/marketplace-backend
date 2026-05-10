@@ -7,6 +7,9 @@ const { sendNewMessageNotification } = require('./emailController');
 exports.createConversation = async (req, res) => {
   try {
     const { listingId, sellerId } = req.body;
+    if (req.user.id === sellerId) {
+      return res.status(400).json({ message: 'Vous ne pouvez pas créer une conversation avec vous-même' });
+    }
     
     const existingConversation = await Conversation.findOne({
       participants: { $all: [req.user.id, sellerId] },
@@ -20,6 +23,11 @@ exports.createConversation = async (req, res) => {
     const listing = await Listing.findById(listingId);
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
+    }
+
+    const seller = await User.findById(sellerId);
+    if (!seller) {
+      return res.status(404).json({ message: 'Seller not found' });
     }
 
     const conversation = new Conversation({
@@ -73,6 +81,12 @@ exports.sendMessage = async (req, res) => {
   try {
     const { conversationId, content } = req.body;
     const userId = req.user.id;
+    if (!content || content.trim().length === 0) {
+      return res.status(400).json({ message: 'Le message ne peut pas être vide' });
+    }
+    if (content.length > 2000) {
+      return res.status(400).json({ message: 'Message trop long (max 2000 caractères)' });
+    }
 
     // Vérifier l'accès à la conversation
     const conversation = await Conversation.findOne({
